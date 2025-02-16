@@ -1,14 +1,24 @@
-import { call, put, takeLatest } from "redux-saga/effects";
+import { put, takeLatest } from "redux-saga/effects";
 import { LOGIN_REQUEST, LOGIN_SUCCESS, LOGIN_FAILURE } from "../Types";
-import { loginService } from "../Services/loginservices";
-import { loginFailure, loginSuccess } from "../Actions/loginaction";
+
+const defaultCredentials = {
+  admin: { username: "admin", password: "admin123" },
+  employee: { username: "employee", password: "emp123" },
+};
 
 function* loginSaga(action) {
   try {
-    const user = yield call(loginService, action.payload);
-    yield put(loginSuccess(user));
+    const { username, password } = action.payload;
+
+    if (username === defaultCredentials.admin.username && password === defaultCredentials.admin.password) {
+      yield put({ type: LOGIN_SUCCESS, payload: { username, role: "admin" } });
+    } else if (username === defaultCredentials.employee.username && password === defaultCredentials.employee.password) {
+      yield put({ type: LOGIN_SUCCESS, payload: { username, role: "employee" } });
+    } else {
+      yield put({ type: LOGIN_FAILURE, payload: "Invalid credentials!" });
+    }
   } catch (error) {
-    yield put(loginFailure(error.message));
+    yield put({ type: LOGIN_FAILURE, payload: error.message });
   }
 }
 

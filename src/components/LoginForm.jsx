@@ -2,6 +2,9 @@ import React, { useEffect } from "react";
 import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { loginRequest } from "../Redux/Actions/loginaction";
+import { ToastContainer, toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const validate = (values) => {
@@ -23,7 +26,8 @@ const validate = (values) => {
 
 const LoginForm = () => {
   const dispatch = useDispatch();
-  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const { loading, isAuthenticated, user, error } = useSelector((state) => state.auth);
 
   const formik = useFormik({
     initialValues: {
@@ -36,18 +40,32 @@ const LoginForm = () => {
     },
   });
 
-  // Reset form on successful login
+  // ✅ Show toast notification after successful login and navigate
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user?.role) {
+      if (user.role === "admin") {
+        toast.success("Welcome, Admin!"); // ✅ Show toast
+        setTimeout(() => navigate("/management"), 2000); // ✅ Navigate after 2 seconds
+      } else if (user.role === "employee") {
+        toast.success("Welcome, Employee!"); // ✅ Show toast
+        setTimeout(() => navigate("/employee"), 2000); // ✅ Navigate after 2 seconds
+      }
       formik.resetForm();
     }
-  }, [isAuthenticated]); // Runs when `isAuthenticated` changes
+  }, [isAuthenticated, user, navigate]);
+
+  // ✅ Show toast if login fails
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   return (
     <div className="container d-flex justify-content-center align-items-center vh-100">
       <div className="card p-4 shadow-lg w-50">
         <h2 className="text-center mb-4">Login</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
+        <ToastContainer position="top-right" autoClose={3000} />
         <form onSubmit={formik.handleSubmit}>
           <div className="mb-4">
             <input
